@@ -1,25 +1,23 @@
+# -*- coding: utf-8 -*-
+
 from os import environ as env
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.core.urlresolvers import reverse
 from django.template import Context, Template
-
 from cabot.cabotapp.alert import AlertPlugin
 
 import requests
 import logging
 
-email_template = """Service {{ service.name }} {{ scheme }}://{{ host }}{% url 'service' pk=service.id %} {% if service.overall_status != service.PASSING_STATUS %}alerting with status: {{ service.overall_status }}{% else %}is back to normal{% endif %}.
+email_template = """服务 {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %} 恢复正常 {% else %} 问题很大 {% endif %}
 {% if service.overall_status != service.PASSING_STATUS %}
-CHECKS FAILING:{% for check in service.all_failing_checks %}
-  FAILING - {{ check.name }} - Type: {{ check.check_category }} - Importance: {{ check.get_importance_display }}{% endfor %}
-{% if service.all_passing_checks %}
-Passing checks:{% for check in service.all_passing_checks %}
-  PASSING - {{ check.name }} - Type: {{ check.check_category }} - Importance: {{ check.get_importance_display }}{% endfor %}
-{% endif %}
+{% for check in service.all_failing_checks %}
+{{ check.name }} - 类别: {{ check.check_category }} - 级别: {{ check.get_importance_display }}{% endfor %}
 {% endif %}
 """
+
 
 class EmailAlert(AlertPlugin):
     name = "Email"
@@ -37,10 +35,9 @@ class EmailAlert(AlertPlugin):
         if service.overall_status != service.PASSING_STATUS:
             if service.overall_status == service.CRITICAL_STATUS:
                 emails += [u.email for u in users if u.email]
-            subject = '%s status for service: %s' % (
-                service.overall_status, service.name)
+            subject = '服务 {} - {}'.format(service.name, service.overall_status)
         else:
-            subject = 'Service back to normal: %s' % (service.name,)
+            subject = '服务 {} 恢复正常'.format(service.name,)
         t = Template(email_template)
         send_mail(
             subject=subject,
