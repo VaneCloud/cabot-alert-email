@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <table border="1">
+            <tr>
+                <th>Metric</th>
+                <th>初次发生时间</th>
+                <th>持续时间</th>
+                <th>阈值</th>
+                <th>当前值</th>
+            </tr>
+            {% for check in service.all_failing_checks %}
+                <tr>
+                    <td>{{ check.metric_name }}</td>
+                    <td>{{ check.format_faild_date }}</td>
+                    <td>{{ check.total_minutes }}</td>
+                    <td>{{ check.threshold }}</td>
+                    <td bgcolor="red">{{ check.current }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
